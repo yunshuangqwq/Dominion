@@ -1,4 +1,4 @@
-本仓库只是用于反向代理文档的 - 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion) +/n <div align=center>
+## 本仓库只是用于反向代理文档的 - 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion) <div align=center>
 
 <img src="logos/logo3.png" alt="" width="30%">
 
