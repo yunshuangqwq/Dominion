@@ -34,7 +34,7 @@ jobs:
           git config --local user.email "shidang233@outlook.com"
           git config --local user.name "yunshuangqwq"
 
-      - name: Clear and update README.md first line
+      - name: Clear and update main README.md first line
         run: |
           TZ=Asia/Shanghai
           export TZ
@@ -42,10 +42,18 @@ jobs:
           sed -i '1d' README.md
           echo -e "# 镜像 Dominion 文档 - 于（$DATE）fork - 源文档：[点击跳转](https://dominion.lunadeer.cn)" | cat - README.md > temp && mv temp README.md
 
+      - name: Clear and update docs/zh-cn/README.md first line
+        run: |
+          TZ=Asia/Shanghai
+          export TZ
+          DATE=$(date "+%Y年%m月%d日 %H时%M分")
+          sed -i '1d' docs/zh-cn/README.md
+          echo -e "# 镜像 Dominion 文档 - 于（$DATE）fork - 源文档：[点击跳转](https://dominion.lunadeer.cn)" | cat - docs/zh-cn/README.md > temp && mv temp docs/zh-cn/README.md
+
       - name: Commit and push changes
         run: |
-          git add README.md
-          git commit -m "Update README.md with the latest date and link" || echo "No changes to commit"
+          git add README.md docs/zh-cn/README.md
+          git commit -m "Update README.md files with the latest date and link" || echo "No changes to commit"
           git push origin master --force
 
       - name: Trigger wiki.yml workflow
