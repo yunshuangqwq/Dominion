@@ -1,0 +1,60 @@
+name: Sy-Update-ck-Run-wiki
+
+on:
+  schedule:
+    - cron: '0 */2 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync-and-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Add upstream repository
+        run: git remote add upstream https://github.com/ColdeZhang/Dominion.git
+
+      - name: Fetch all upstream branches
+        run: git fetch upstream
+
+      - name: Checkout upstream changes excluding .github
+        run: |
+          git checkout upstream/master -- . 
+          git reset -- .github
+
+      - name: Clean untracked files, preserving .github directory
+        run: |
+          git clean -fdx -e .github
+
+      - name: Set up Git user
+        run: |
+          git config --local user.email "shidang233@outlook.com"
+          git config --local user.name "yunshuangqwq"
+
+      - name: Clear and update README.md first line
+        run: |
+          TZ=Asia/Shanghai
+          export TZ
+          DATE=$(date "+%Y年%m月%d日 %H时%M分")
+          sed -i '1d' README.md
+          echo -e "# 镜像 Dominion 文档 - 于（$DATE）fork - 源文档：[点击跳转](https://dominion.lunadeer.cn)" | cat - README.md > temp && mv temp README.md
+
+      - name: Commit and push changes
+        run: |
+          git add README.md
+          git commit -m "Update README.md with the latest date and link" || echo "No changes to commit"
+          git push origin master --force
+
+      - name: Trigger wiki.yml workflow
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -X POST \
+          -H "Authorization: token $GITHUB_TOKEN" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -H "Content-Type: application/json" \
+          https://api.github.com/repos/${{ github.repository }}/actions/workflows/wiki.yml/dispatches \
+          -d '{"ref": "master"}'
