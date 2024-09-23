@@ -6,7 +6,6 @@ import cn.lunadeer.dominion.dtos.MemberDTO;
 import cn.lunadeer.dominion.managers.Translation;
 import cn.lunadeer.minecraftpluginutils.Notification;
 import cn.lunadeer.minecraftpluginutils.stui.ListView;
-import cn.lunadeer.minecraftpluginutils.stui.components.Button;
 import cn.lunadeer.minecraftpluginutils.stui.components.Line;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;

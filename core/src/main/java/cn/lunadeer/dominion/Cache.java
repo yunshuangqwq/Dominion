@@ -1,5 +1,6 @@
 package cn.lunadeer.dominion;
 
+import cn.lunadeer.dominion.api.DominionAPI;
 import cn.lunadeer.dominion.dtos.*;
 import cn.lunadeer.dominion.utils.MessageDisplay;
 import cn.lunadeer.dominion.utils.Particle;
@@ -25,7 +26,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import static cn.lunadeer.dominion.DominionNode.getLocInDominionNode;
 import static cn.lunadeer.dominion.DominionNode.isInDominion;
 
-public class Cache {
+public class Cache implements DominionAPI {
 
     public Cache() {
         player_current_dominion_id = new HashMap<>();
@@ -205,16 +206,8 @@ public class Cache {
         });
     }
 
-    /**
-     * 获取玩家当前所在领地
-     * 此方法会先判断缓存中是否有玩家当前所在领地，如果没有则遍历所有领地判断玩家所在位置
-     * 如果玩家不在任何领地内，则返回null
-     * 如果玩家在领地内，则返回领地信息
-     *
-     * @param player 玩家
-     * @return 玩家当前所在领地
-     */
-    public DominionDTO getPlayerCurrentDominion(Player player) {
+    @Override
+    public DominionDTO getPlayerCurrentDominion(@NotNull Player player) {
         try (AutoTimer ignored = new AutoTimer(Dominion.config.TimerEnabled())) {
             Integer last_in_dom_id = player_current_dominion_id.get(player.getUniqueId());
             DominionDTO last_dominion = null;
@@ -258,6 +251,11 @@ public class Cache {
             }
             return current_dominion;
         }
+    }
+
+    @Override
+    public DominionDTO getDominionByLoc(@NotNull Location loc) {
+        return dominion_trees.getLocInDominionDTO(loc);
     }
 
     /**
@@ -339,34 +337,19 @@ public class Cache {
         }
     }
 
-    /**
-     * 获取指定位置的领地信息
-     *
-     * @param loc 位置
-     * @return 领地信息    如果位置不在任何领地内，则返回null
-     */
-    public DominionDTO getDominionByLoc(Location loc) {
-        return dominion_trees.getLocInDominionDTO(loc);
-    }
-
-    public GroupDTO getGroup(Integer id) {
+    @Override
+    public GroupDTO getGroup(@NotNull Integer id) {
         return id_groups.get(id);
     }
 
-    /**
-     * 获取玩家在指定领地的特权
-     * 如果玩家不存在特权，则返回null
-     *
-     * @param player   玩家
-     * @param dominion 领地
-     * @return 特权表
-     */
-    public MemberDTO getMember(Player player, DominionDTO dominion) {
+    @Override
+    public MemberDTO getMember(@NotNull Player player, cn.lunadeer.dominion.api.dtos.@NotNull DominionDTO dominion) {
         if (!player_uuid_to_member.containsKey(player.getUniqueId())) return null;
         return player_uuid_to_member.get(player.getUniqueId()).get(dominion.getId());
     }
 
-    public MemberDTO getMember(UUID player_uuid, DominionDTO dominion) {
+    @Override
+    public MemberDTO getMember(@NotNull UUID player_uuid, cn.lunadeer.dominion.api.dtos.@NotNull DominionDTO dominion) {
         if (!player_uuid_to_member.containsKey(player_uuid)) return null;
         return player_uuid_to_member.get(player_uuid).get(dominion.getId());
     }
@@ -385,7 +368,8 @@ public class Cache {
         return groups;
     }
 
-    public DominionDTO getDominion(Integer id) {
+    @Override
+    public DominionDTO getDominion(@NotNull Integer id) {
         return id_dominions.get(id);
     }
 
@@ -418,7 +402,8 @@ public class Cache {
         return residence_data.get(player_uuid);
     }
 
-    public List<DominionDTO> getDominions() {
+    @Override
+    public @NotNull List<cn.lunadeer.dominion.api.dtos.DominionDTO> getAllDominions() {
         return new ArrayList<>(id_dominions.values());
     }
 
@@ -597,7 +582,8 @@ public class Cache {
         }
     }
 
-    public @Nullable GroupDTO getPlayerUsingGroupTitle(UUID uuid) {
+    @Override
+    public @Nullable GroupDTO getPlayerUsingGroupTitle(@NotNull UUID uuid) {
         if (!Dominion.config.getGroupTitleEnable()) {
             return null;
         }

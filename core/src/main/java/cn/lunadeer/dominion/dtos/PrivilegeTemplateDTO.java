@@ -1,5 +1,6 @@
 package cn.lunadeer.dominion.dtos;
 
+import cn.lunadeer.dominion.api.dtos.Flag;
 import cn.lunadeer.minecraftpluginutils.databse.DatabaseManager;
 import cn.lunadeer.minecraftpluginutils.databse.Field;
 import cn.lunadeer.minecraftpluginutils.databse.syntax.InsertRow;
@@ -26,7 +27,7 @@ public class PrivilegeTemplateDTO {
         try {
             while (rs.next()) {
                 Map<Flag, Boolean> flags = new HashMap<>();
-                for (Flag f : Flag.getPrivilegeFlagsEnabled()) {
+                for (Flag f : cn.lunadeer.dominion.dtos.Flag.getPrivilegeFlagsEnabled()) {
                     flags.put(f, rs.getBoolean(f.getFlagName()));
                 }
                 PrivilegeTemplateDTO template = new PrivilegeTemplateDTO(
