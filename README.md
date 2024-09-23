@@ -1,4 +1,4 @@
-## 本仓库只是用于反向代理文档的 - 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion) <div align=center>
+## fork于（2024年09月23日 09时25分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库！ - 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion) + /n + <div align=center>
 
 <img src="logos/logo3.png" alt="" width="30%">
 
