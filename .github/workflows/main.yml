@@ -8,7 +8,7 @@ on:
 
 jobs:
   build:
-    #	配置权限
+    # 配置权限
     permissions: write-all
     runs-on: ubuntu-latest
     steps:
@@ -28,14 +28,7 @@ jobs:
         run: |
           TAG=$(echo $GITHUB_REF | sed 's/refs\/tags\///')
           echo "done!"
-      - name: "GitHub Release"
-        uses: "marvinpinto/action-automatic-releases@latest"
-        with:
-          repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "${{ steps.build.outputs.TAG }}"
-          prerelease: false
-          files: |
-            staging/*.jar
+      # 移除 GitHub Release 步骤
       - name: "Modrinth Release"
         uses: dsx137/modrinth-release-action@main
         env:
