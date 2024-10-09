@@ -1,6 +1,6 @@
 ## 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion)
 ## 镜像的文档：[点击跳转](https://dom.yunr.us.kg)
-fork于（2024年10月09日 14时16分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
+fork于（2024年10月09日 16时14分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
 <div align=center>
 
 <img src="logos/logo3.png" alt="" width="30%">
@@ -32,9 +32,6 @@ For detail functions and features of Dominion, you can view [Introduction](intro
 ## Version Support
 
 - 1.20.1+ (Bukkit、Spigot、Paper、Folia)
-
-> You need to use Java21 to run your server. If you are still using Java17, you can safely replace it with Java21. In
-> theory, version 1.20.1+ can be directly upgraded to Java21.
 
 > Although this plugin supports Spigot, we strongly recommend that you upgrade your core to Paper or its forked (such as
 > Purpur) for a better performance experience.
