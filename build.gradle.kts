@@ -11,7 +11,7 @@ var libraries = listOf<String>()
 libraries = libraries + "cn.lunadeer:MinecraftPluginUtils:2.0.7"
 
 group = "cn.lunadeer"
-version = "2.14.1-beta"
+version = "2.14.3-beta"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -34,12 +34,15 @@ allprojects {
         maven("https://jitpack.io")
         maven("https://repo.mikeprimm.com/")
         maven("https://repo.extendedclip.com/content/repositories/placeholderapi/")
+        maven("https://repo.codemc.org/repository/maven-public")
     }
 
     dependencies {
         compileOnly("com.github.BlueMap-Minecraft:BlueMapAPI:v2.6.2")
         compileOnly("us.dynmap:DynmapCoreAPI:3.4")
         compileOnly("me.clip:placeholderapi:2.11.6")
+        compileOnly("com.github.MilkBowl:VaultAPI:1.7")
+        compileOnly("net.milkbowl.vault:VaultUnlockedAPI:2.2")
 
         if (!BuildFull) {
             libraries.forEach {
