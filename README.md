@@ -1,6 +1,6 @@
 ## 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion)
 ## 镜像的文档：[点击跳转](https://dom.yunr.us.kg)
-fork于（2024年10月31日 16时13分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
+fork于（2024年10月31日 18时11分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
 <div align=center>
 
 <img src="logos/logo3.png" alt="" width="30%">
@@ -51,6 +51,12 @@ For detailed contribution guidelines (such as **translation** etc.), please see 
 > **This project was developed under chinese-simplified originally. It's Multi-Language was translated by AI currently.**
 > **So, there must be some mistakes in the translation. If you find any mistakes (or inappropriate translations), please**
 > **feel free to modify it and submit a pull request. See [Translating](CONTRIBUTING.md#translating) for more details.**
+
+### Contributors
+
+<a href="https://github.com/ColdeZhang/Dominion/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ColdeZhang/Dominion" />
+</a>
 
 ## bStats Statics
 
