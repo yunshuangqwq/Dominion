@@ -1,4 +1,4 @@
-# 指令列表
+.# 指令列表
 
 > dominion可简化为dom使用，例如`/dom list`
 
@@ -137,4 +137,3 @@
 | 导出（备份）数据库 | `/dominion export_db`     | 将数据库导出为文件，便于迁移、备份等操作；   |
 | 从文件导入数据库  | `/dominion import_db`     | 将数据库导入为文件，便于迁移、备份等操作；   |
 | 导出领地mca文件列表  | `/dominion export_mca`     | 导出含有领地的mca文件列表；   |
-出含有领地的mca文件列表；   |
