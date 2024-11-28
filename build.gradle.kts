@@ -11,7 +11,7 @@ var libraries = listOf<String>()
 libraries = libraries + "cn.lunadeer:MinecraftPluginUtils:2.0.7"
 
 group = "cn.lunadeer"
-version = "2.14.6-beta"
+version = "2.14.8-beta"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -90,7 +90,8 @@ allprojects {
 dependencies {
     implementation(project(":core"))
     implementation(project(":v1_20_1"))
-    implementation(project(":v1_21"))
+    implementation(project(":v1_21_paper"))
+    implementation(project(":v1_21_spigot"))
 }
 
 tasks.shadowJar {
