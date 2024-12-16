@@ -1,7 +1,7 @@
 package cn.lunadeer.dominion.managers;
 
 
-import cn.lunadeer.dominion.dtos.Flag;
+import cn.lunadeer.dominion.api.dtos.flag.Flag;
 import cn.lunadeer.minecraftpluginutils.i18n.Localization;
 import cn.lunadeer.minecraftpluginutils.i18n.i18n;
 import cn.lunadeer.minecraftpluginutils.i18n.i18nField;
@@ -242,7 +242,7 @@ public class Translation extends Localization {
     public static i18n Messages_ParentDominionNotExist;
     @i18nField(defaultValue = "根领地丢失！")
     public static i18n Messages_RootDominionLost;
-    @i18nField(defaultValue = "你不是父领地 %s 的拥有者，无法创建子领地")
+    @i18nField(defaultValue = "你不是父领地 %s 的拥有者")
     public static i18n Messages_NotParentDominionOwner;
     @i18nField(defaultValue = "父领地与子领地不在同一世界")
     public static i18n Messages_ParentDominionNotInSameWorld;
@@ -280,8 +280,12 @@ public class Translation extends Localization {
     public static i18n Messages_DeleteDominionForceConfirm;
     @i18nField(defaultValue = "成功设置领地 %s 的进入消息")
     public static i18n Messages_SetEnterMessageSuccess;
+    @i18nField(defaultValue = "设置领地进入消息失败")
+    public static i18n Messages_SetEnterMessageFailed;
     @i18nField(defaultValue = "成功设置领地 %s 的离开消息")
     public static i18n Messages_SetLeaveMessageSuccess;
+    @i18nField(defaultValue = "设置领地离开消息失败")
+    public static i18n Messages_SetLeaveMessageFailed;
     @i18nField(defaultValue = "设置领地传送点失败")
     public static i18n Messages_SetTpLocationFailed;
     @i18nField(defaultValue = "领地 %s 不存在")

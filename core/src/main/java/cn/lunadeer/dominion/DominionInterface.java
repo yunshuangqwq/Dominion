@@ -1,10 +1,12 @@
 package cn.lunadeer.dominion;
 
+import cn.lunadeer.dominion.api.AbstractOperator;
 import cn.lunadeer.dominion.api.DominionAPI;
-import cn.lunadeer.dominion.dtos.DominionDTO;
-import cn.lunadeer.dominion.dtos.Flag;
-import cn.lunadeer.dominion.dtos.GroupDTO;
-import cn.lunadeer.dominion.dtos.MemberDTO;
+import cn.lunadeer.dominion.api.dtos.DominionDTO;
+import cn.lunadeer.dominion.api.dtos.GroupDTO;
+import cn.lunadeer.dominion.api.dtos.MemberDTO;
+import cn.lunadeer.dominion.api.dtos.PlayerDTO;
+import cn.lunadeer.dominion.controllers.BukkitPlayerOperator;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -53,6 +55,11 @@ public class DominionInterface implements DominionAPI {
     }
 
     @Override
+    public DominionDTO getDominion(@NotNull String name) {
+        return cn.lunadeer.dominion.dtos.DominionDTO.select(name);
+    }
+
+    @Override
     public @NotNull List<cn.lunadeer.dominion.api.dtos.DominionDTO> getAllDominions() {
         return Cache.instance.getAllDominions();
     }
@@ -63,18 +70,28 @@ public class DominionInterface implements DominionAPI {
     }
 
     @Override
-    public @NotNull List<cn.lunadeer.dominion.api.dtos.Flag> getEnvironmentFlagsEnabled() {
-        return new ArrayList<>(Flag.getEnvironmentFlagsEnabled());
+    public @NotNull AbstractOperator getPlayerOperator(@NotNull Player player) {
+        return BukkitPlayerOperator.create(player);
     }
 
     @Override
-    public @NotNull List<cn.lunadeer.dominion.api.dtos.Flag> getPrivilegeFlagsEnabled() {
-        return new ArrayList<>(Flag.getPrivilegeFlagsEnabled());
+    public @NotNull AbstractOperator getPluginOperator() {
+        return null;// todo
     }
 
     @Override
-    public cn.lunadeer.dominion.api.dtos.@Nullable Flag getFlagByName(@NotNull String flagName) {
-        return Flag.getFlag(flagName);
+    public @Nullable PlayerDTO getPlayerDTO(UUID uuid) {
+        return cn.lunadeer.dominion.dtos.PlayerDTO.select(uuid);
+    }
+
+    @Override
+    public @Nullable PlayerDTO getPlayerDTO(String name) {
+        return cn.lunadeer.dominion.dtos.PlayerDTO.select(name);
+    }
+
+    @Override
+    public List<DominionDTO> getPlayerDominions(@NotNull UUID playerUid) {
+        return new ArrayList<>(cn.lunadeer.dominion.dtos.DominionDTO.selectByOwner(playerUid));
     }
 
 }

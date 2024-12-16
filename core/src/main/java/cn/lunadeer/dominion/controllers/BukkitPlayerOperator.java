@@ -1,20 +1,20 @@
 package cn.lunadeer.dominion.controllers;
 
+import cn.lunadeer.dominion.api.AbstractOperator;
 import cn.lunadeer.minecraftpluginutils.Notification;
+import cn.lunadeer.minecraftpluginutils.XLogger;
 import org.bukkit.Location;
 import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 import javax.annotation.Nullable;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
-public class BukkitPlayerOperator implements AbstractOperator {
+public class BukkitPlayerOperator extends AbstractOperator {
 
     private final CommandSender player;
-    private final CompletableFuture<Result> response = new CompletableFuture<>();
+
 
     public BukkitPlayerOperator(CommandSender player) {
         this.player = player;
@@ -40,11 +40,6 @@ public class BukkitPlayerOperator implements AbstractOperator {
         } else {
             return ((Player) player).isOp() || player.hasPermission("dominion.admin");
         }
-    }
-
-    @Override
-    public void setResponse(Result result) {
-        response.complete(result);
     }
 
     @Override
@@ -89,28 +84,72 @@ public class BukkitPlayerOperator implements AbstractOperator {
         }
     }
 
-    @Override
-    public CompletableFuture<Result> getResponse() {
-        return response;
+    public static BukkitPlayerOperator create(CommandSender player) {
+        return new BukkitPlayerOperator(player);
     }
 
-    public static BukkitPlayerOperator create(CommandSender player) {
-        BukkitPlayerOperator operator = new BukkitPlayerOperator(player);
-        operator.getResponse().thenAccept(result -> {
-            if (Objects.equals(result.getStatus(), BukkitPlayerOperator.Result.SUCCESS)) {
-                for (String msg : result.getMessages()) {
-                    Notification.info(player, msg);
-                }
-            } else if (Objects.equals(result.getStatus(), BukkitPlayerOperator.Result.WARNING)) {
-                for (String msg : result.getMessages()) {
-                    Notification.warn(player, msg);
+    private void show(ResultType type) {
+        if (getHeader().containsKey(type)) {
+            if (getPlayer() != null) {
+                switch (type) {
+                    case FAILURE:
+                        Notification.error(getPlayer(), getHeader().get(type));
+                        break;
+                    case WARNING:
+                        Notification.warn(getPlayer(), getHeader().get(type));
+                        break;
+                    default:
+                        Notification.info(getPlayer(), getHeader().get(type));
                 }
             } else {
-                for (String msg : result.getMessages()) {
-                    Notification.error(player, msg);
+                switch (type) {
+                    case FAILURE:
+                        XLogger.err(getHeader().get(type));
+                        break;
+                    case WARNING:
+                        XLogger.warn(getHeader().get(type));
+                        break;
+                    default:
+                        XLogger.info(getHeader().get(type));
                 }
             }
-        });
-        return operator;
+        }
+        for (String message : getResults().get(type)) {
+            if (getPlayer() != null) {
+                switch (type) {
+                    case FAILURE:
+                        Notification.error(getPlayer(), message);
+                        break;
+                    case WARNING:
+                        Notification.warn(getPlayer(), message);
+                        break;
+                    default:
+                        Notification.info(getPlayer(), message);
+                }
+            } else {
+                switch (type) {
+                    case FAILURE:
+                        XLogger.err(message);
+                        break;
+                    case WARNING:
+                        XLogger.warn(message);
+                        break;
+                    default:
+                        XLogger.info(message);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void completeResult() {
+        if (!getResults().get(ResultType.WARNING).isEmpty()) {
+            show(ResultType.WARNING);
+        }
+        if (!getResults().get(ResultType.FAILURE).isEmpty()) {
+            show(ResultType.FAILURE);
+        } else {
+            show(ResultType.SUCCESS);
+        }
     }
 }

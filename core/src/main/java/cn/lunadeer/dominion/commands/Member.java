@@ -1,7 +1,14 @@
 package cn.lunadeer.dominion.commands;
 
+import cn.lunadeer.dominion.api.dtos.flag.Flags;
+import cn.lunadeer.dominion.api.dtos.flag.PreFlag;
 import cn.lunadeer.dominion.controllers.BukkitPlayerOperator;
 import cn.lunadeer.dominion.controllers.MemberController;
+import cn.lunadeer.dominion.dtos.DominionDTO;
+import cn.lunadeer.dominion.dtos.MemberDTO;
+import cn.lunadeer.dominion.dtos.PlayerDTO;
+import cn.lunadeer.dominion.events.member.MemberAddedEvent;
+import cn.lunadeer.dominion.events.member.MemberRemovedEvent;
 import cn.lunadeer.dominion.managers.Translation;
 import cn.lunadeer.dominion.uis.tuis.dominion.manage.member.MemberList;
 import cn.lunadeer.dominion.uis.tuis.dominion.manage.member.MemberSetting;
@@ -39,11 +46,24 @@ public class Member {
                 Notification.error(sender, Translation.Commands_Member_DominionAddMemberUsage);
                 return;
             }
+            PlayerDTO playerDTO = PlayerDTO.select(args[3]);
+            if (playerDTO == null) {
+                Notification.error(sender, Translation.Messages_PlayerNotExist, args[3]);
+                return;
+            }
+            DominionDTO dominion = DominionDTO.select(args[2]);
+            if (dominion == null) {
+                Notification.error(sender, Translation.Messages_DominionNotExist, args[2]);
+                return;
+            }
+            MemberDTO member = MemberDTO.select(playerDTO.getUuid(), dominion.getId());
+            if (member != null) {
+                Notification.error(sender, Translation.Messages_PlayerAlreadyMember, args[3], args[2]);
+                return;
+            }
             BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
-            String dominionName = args[2];
-            String playerName = args[3];
-            MemberController.memberAdd(operator, dominionName, playerName);
-            MemberList.show(sender, dominionName);
+            new MemberAddedEvent(operator, dominion, playerDTO).call();
+            MemberList.show(sender, args[2]);
         } catch (Exception e) {
             Notification.error(sender, e.getMessage());
         }
@@ -71,7 +91,12 @@ public class Member {
             String flagName = args[4];
             boolean flagValue = Boolean.parseBoolean(args[5]);
             Integer page = args.length == 7 ? Integer.parseInt(args[6]) : 1;
-            MemberController.setMemberFlag(operator, dominionName, playerName, flagName, flagValue);
+            PreFlag flag = Flags.getPreFlag(flagName);
+            if (flag == null) {
+                Notification.error(sender, Translation.Messages_UnknownFlag, flagName);
+                return;
+            }
+            MemberController.setMemberFlag(operator, dominionName, playerName, flag, flagValue);
             MemberSetting.show(sender, dominionName, playerName, page);
         } catch (Exception e) {
             Notification.error(sender, e.getMessage());
@@ -94,11 +119,24 @@ public class Member {
                 Notification.error(sender, Translation.Commands_Member_DominionRemoveMemberUsage);
                 return;
             }
+            DominionDTO dominion = DominionDTO.select(args[2]);
+            if (dominion == null) {
+                Notification.error(sender, Translation.Messages_DominionNotExist, args[2]);
+                return;
+            }
+            PlayerDTO playerDTO = PlayerDTO.select(args[3]);
+            if (playerDTO == null) {
+                Notification.error(sender, Translation.Messages_PlayerNotExist, args[3]);
+                return;
+            }
+            MemberDTO member = MemberDTO.select(playerDTO.getUuid(), dominion.getId());
+            if (member == null) {
+                Notification.error(sender, Translation.Messages_PlayerNotMember, args[3], args[2]);
+                return;
+            }
             BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
-            String dominionName = args[2];
-            String playerName = args[3];
-            MemberController.memberRemove(operator, dominionName, playerName);
-            MemberList.show(sender, dominionName);
+            new MemberRemovedEvent(operator, dominion, member).call();
+            MemberList.show(sender, args[2]);
         } catch (Exception e) {
             Notification.error(sender, e.getMessage());
         }

@@ -2,13 +2,20 @@ package cn.lunadeer.dominion.dtos;
 
 import cn.lunadeer.dominion.Cache;
 import cn.lunadeer.dominion.Dominion;
-import cn.lunadeer.dominion.api.dtos.Flag;
+import cn.lunadeer.dominion.api.dtos.GroupDTO;
+import cn.lunadeer.dominion.api.dtos.MemberDTO;
+import cn.lunadeer.dominion.api.dtos.PlayerDTO;
+import cn.lunadeer.dominion.api.dtos.flag.EnvFlag;
+import cn.lunadeer.dominion.api.dtos.flag.Flag;
+import cn.lunadeer.dominion.api.dtos.flag.Flags;
+import cn.lunadeer.dominion.api.dtos.flag.PreFlag;
 import cn.lunadeer.minecraftpluginutils.XLogger;
 import cn.lunadeer.minecraftpluginutils.databse.DatabaseManager;
 import cn.lunadeer.minecraftpluginutils.databse.Field;
 import cn.lunadeer.minecraftpluginutils.databse.FieldType;
 import cn.lunadeer.minecraftpluginutils.databse.syntax.InsertRow;
 import cn.lunadeer.minecraftpluginutils.databse.syntax.UpdateRow;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
@@ -47,7 +54,7 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
             Integer parentDomId = rs.getInt("parent_dom_id");
             String tp_location = rs.getString("tp_location");
             Map<Flag, Boolean> flags = new HashMap<>();
-            for (Flag f : cn.lunadeer.dominion.dtos.Flag.getDominionFlagsEnabled()) {
+            for (Flag f : Flags.getAllFlagsEnable()) {
                 flags.put(f, rs.getBoolean(f.getFlagName()));
             }
             String color = rs.getString("color");
@@ -127,7 +134,7 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
                 .field(dominion.parentDomId)
                 .field(dominion.joinMessage).field(dominion.leaveMessage)
                 .field(dominion.tp_location);
-        for (Flag f : cn.lunadeer.dominion.dtos.Flag.getDominionFlagsEnabled()) {
+        for (Flag f : Flags.getAllFlagsEnable()) {
             insert.field(new Field(f.getFlagName(), f.getDefaultValue()));
         }
         try (ResultSet rs = insert.execute()) {
@@ -141,9 +148,9 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
         }
     }
 
-    public static void delete(DominionDTO dominion) {
+    public static void deleteById(Integer dominion) {
         String sql = "DELETE FROM dominion WHERE id = ?;";
-        query(sql, dominion.getId());
+        query(sql, dominion);
         Cache.instance.loadDominions();
     }
 
@@ -196,8 +203,14 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
         this(null, owner, name, world.getUID(), x1, y1, z1, x2, y2, z2, -1);
     }
 
-    public static DominionDTO create(UUID owner, String name, @NotNull World world,
-                                     Integer x1, Integer y1, Integer z1, Integer x2, Integer y2, Integer z2, DominionDTO parent) {
+    public static @NotNull DominionDTO create(UUID owner, String name, @NotNull World world,
+                                              Integer x1, Integer y1, Integer z1, Integer x2, Integer y2, Integer z2, cn.lunadeer.dominion.api.dtos.DominionDTO parent) {
+        x1 = Math.min(x1, x2);
+        y1 = Math.min(y1, y2);
+        z1 = Math.min(z1, z2);
+        x2 = Math.max(x1, x2) + 1;
+        y2 = Math.max(y1, y2) + 1;
+        z2 = Math.max(z1, z2) + 1;
         return new DominionDTO(null, owner, name, world.getUID(), x1, y1, z1, x2, y2, z2, parent == null ? -1 : parent.getId());
     }
 
@@ -225,9 +238,25 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
         return (Integer) id.value;
     }
 
+    /**
+     * 设置领地ID，该方法不会更新数据库，仅用于构造对象
+     *
+     * @param id 领地ID
+     * @return 领地
+     */
+    public @NotNull DominionDTO setId(Integer id) {
+        this.id.value = id;
+        return this;
+    }
+
     @Override
     public @NotNull UUID getOwner() {
         return UUID.fromString((String) owner.value);
+    }
+
+    @Override
+    public @NotNull PlayerDTO getOwnerDTO() {
+        return Objects.requireNonNull(cn.lunadeer.dominion.dtos.PlayerDTO.select(getOwner()));
     }
 
     private DominionDTO doUpdate(UpdateRow updateRow) {
@@ -396,21 +425,50 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
     }
 
     @Override
-    public @NotNull Map<Flag, Boolean> getEnvironmentFlagValue() {
+    public @NotNull Map<EnvFlag, Boolean> getEnvironmentFlagValue() {
         return flags.entrySet().stream()
-                .filter(e -> e.getKey().isEnvironmentFlag())
-                .collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+                .filter(e -> e.getKey() instanceof EnvFlag)
+                .collect(HashMap::new, (m, e) -> m.put((EnvFlag) e.getKey(), e.getValue()), HashMap::putAll);
+    }
+
+    /**
+     * 获取领地某个环境配置的值
+     *
+     * @param flag 权限
+     * @return 权限值
+     */
+    @Override
+    public boolean getEnvFlagValue(@NotNull EnvFlag flag) {
+        return getFlagValue(flag);
     }
 
     @Override
-    public @NotNull Map<Flag, Boolean> getGuestPrivilegeFlagValue() {
+    public @NotNull Map<PreFlag, Boolean> getGuestPrivilegeFlagValue() {
         return flags.entrySet().stream()
-                .filter(e -> !e.getKey().isEnvironmentFlag())
-                .collect(HashMap::new, (m, e) -> m.put(e.getKey(), e.getValue()), HashMap::putAll);
+                .filter(e -> e.getKey() instanceof PreFlag)
+                .collect(HashMap::new, (m, e) -> m.put((PreFlag) e.getKey(), e.getValue()), HashMap::putAll);
+    }
+
+    /**
+     * 获取领地某个访客权限的值
+     *
+     * @param flag 权限
+     * @return 权限值
+     */
+    @Override
+    public boolean getGuestFlagValue(@NotNull PreFlag flag) {
+        return getFlagValue(flag);
     }
 
     @Override
-    public DominionDTO setFlagValue(@NotNull Flag flag, @NotNull Boolean value) {
+    public DominionDTO setEnvFlagValue(@NotNull EnvFlag flag, @NotNull Boolean value) {
+        flags.put(flag, value);
+        Field flagField = new Field(flag.getFlagName(), value);
+        return doUpdate(new UpdateRow().field(flagField));
+    }
+
+    @Override
+    public DominionDTO setGuestFlagValue(@NotNull PreFlag flag, @NotNull Boolean value) {
         flags.put(flag, value);
         Field flagField = new Field(flag.getFlagName(), value);
         return doUpdate(new UpdateRow().field(flagField));
@@ -471,6 +529,7 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
         }
     }
 
+    @Override
     public DominionDTO setTpLocation(Location loc) {
         this.tp_location.value = loc.getBlockX() + ":" + loc.getBlockY() + ":" + loc.getBlockZ();
         return doUpdate(new UpdateRow().field(tp_location));
@@ -486,9 +545,19 @@ public class DominionDTO implements cn.lunadeer.dominion.api.dtos.DominionDTO {
         return new Location(getWorld(), getX2(), getY2(), getZ2());
     }
 
-    public DominionDTO setColor(String color) {
-        this.color.value = color;
+    public @Nullable DominionDTO setColor(@NotNull Color color) {
+        this.color.value = String.format("#%02x%02x%02x", color.getRed(), color.getGreen(), color.getBlue());
         return doUpdate(new UpdateRow().field(this.color));
+    }
+
+    @Override
+    public List<GroupDTO> getGroups() {
+        return new ArrayList<>(cn.lunadeer.dominion.dtos.GroupDTO.selectByDominionId(getId()));
+    }
+
+    @Override
+    public List<MemberDTO> getMembers() {
+        return new ArrayList<>(cn.lunadeer.dominion.dtos.MemberDTO.selectByDominionId(getId()));
     }
 
     @Override

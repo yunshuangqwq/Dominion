@@ -1,6 +1,10 @@
 package cn.lunadeer.dominion;
 
-import cn.lunadeer.dominion.dtos.*;
+import cn.lunadeer.dominion.api.dtos.DominionDTO;
+import cn.lunadeer.dominion.api.dtos.GroupDTO;
+import cn.lunadeer.dominion.api.dtos.MemberDTO;
+import cn.lunadeer.dominion.api.dtos.PlayerDTO;
+import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.events.PlayerCrossDominionBorderEvent;
 import cn.lunadeer.dominion.events.PlayerMoveInDominionEvent;
 import cn.lunadeer.dominion.events.PlayerMoveOutDominionEvent;
@@ -78,7 +82,7 @@ public class Cache implements Listener {
                 id_dominions = new ConcurrentHashMap<>();
                 dominion_children = new ConcurrentHashMap<>();
 
-                List<DominionDTO> dominions = DominionDTO.selectAll();
+                List<DominionDTO> dominions = new ArrayList<>(cn.lunadeer.dominion.dtos.DominionDTO.selectAll());
                 CompletableFuture<Void> res = dominion_trees.initAsync(dominions);
                 count = dominions.size();
 
@@ -92,7 +96,7 @@ public class Cache implements Listener {
 
                 res.join(); // 等待树的构建完成
             } else {
-                DominionDTO dominion = DominionDTO.select(idToLoad);
+                DominionDTO dominion = cn.lunadeer.dominion.dtos.DominionDTO.select(idToLoad);
                 if (dominion == null && id_dominions.containsKey(idToLoad)) {
                     id_dominions.remove(idToLoad);
                 } else if (dominion != null) {
@@ -141,10 +145,10 @@ public class Cache implements Listener {
             long start = System.currentTimeMillis();
             List<MemberDTO> all_privileges;
             if (player_to_update == null) {
-                all_privileges = MemberDTO.selectAll();
+                all_privileges = new ArrayList<>(cn.lunadeer.dominion.dtos.MemberDTO.selectAll());
                 player_uuid_to_member = new ConcurrentHashMap<>();
             } else {
-                all_privileges = MemberDTO.selectAll(player_to_update);
+                all_privileges = new ArrayList<>(cn.lunadeer.dominion.dtos.MemberDTO.selectAll(player_to_update));
                 if (!player_uuid_to_member.containsKey(player_to_update)) {
                     player_uuid_to_member.put(player_to_update, new ConcurrentHashMap<>());
                 }
@@ -191,8 +195,8 @@ public class Cache implements Listener {
             long start = System.currentTimeMillis();
             if (groupId == null) {
                 id_groups = new ConcurrentHashMap<>();
-                List<GroupDTO> groups = GroupDTO.selectAll();
-                List<PlayerDTO> players = PlayerDTO.all();
+                List<GroupDTO> groups = new ArrayList<>(cn.lunadeer.dominion.dtos.GroupDTO.selectAll());
+                List<PlayerDTO> players = new ArrayList<>(cn.lunadeer.dominion.dtos.PlayerDTO.all());
                 for (GroupDTO group : groups) {
                     id_groups.put(group.getId(), group);
                 }
@@ -200,7 +204,7 @@ public class Cache implements Listener {
                     map_player_using_group_title_id.put(player.getUuid(), player.getUsingGroupTitleID());
                 }
             } else {
-                GroupDTO group = GroupDTO.select(groupId);
+                GroupDTO group = cn.lunadeer.dominion.dtos.GroupDTO.select(groupId);
                 if (group == null && id_groups.containsKey(groupId)) {
                     id_groups.remove(groupId);
                 } else if (group != null) {
@@ -283,7 +287,7 @@ public class Cache implements Listener {
      * @param dominion 领地
      */
     private void lightOrNot(Player player, DominionDTO dominion) {
-        if (!Flag.GLOW.getEnable()) {
+        if (!Flags.GLOW.getEnable()) {
             return;
         }
         if (dominion == null) {
@@ -293,17 +297,17 @@ public class Cache implements Listener {
         MemberDTO privilege = getMember(player, dominion);
         if (privilege != null) {
             if (privilege.getGroupId() == -1) {
-                player.setGlowing(privilege.getFlagValue(Flag.GLOW));
+                player.setGlowing(privilege.getFlagValue(Flags.GLOW));
             } else {
                 GroupDTO group = getGroup(privilege.getGroupId());
                 if (group != null) {
-                    player.setGlowing(group.getFlagValue(Flag.GLOW));
+                    player.setGlowing(group.getFlagValue(Flags.GLOW));
                 } else {
-                    player.setGlowing(dominion.getFlagValue(Flag.GLOW));
+                    player.setGlowing(dominion.getGuestPrivilegeFlagValue().get(Flags.GLOW));
                 }
             }
         } else {
-            player.setGlowing(dominion.getFlagValue(Flag.GLOW));
+            player.setGlowing(dominion.getGuestPrivilegeFlagValue().get(Flags.GLOW));
         }
     }
 
@@ -319,7 +323,7 @@ public class Cache implements Listener {
         if (player.isOp() && Dominion.config.getLimitOpBypass()) {
             return;
         }
-        if (!Flag.FLY.getEnable()) {
+        if (!Flags.FLY.getEnable()) {
             player.setAllowFlight(false);
             return;
         }
@@ -330,17 +334,17 @@ public class Cache implements Listener {
         MemberDTO privilege = getMember(player, dominion);
         if (privilege != null) {
             if (privilege.getGroupId() == -1) {
-                player.setAllowFlight(privilege.getFlagValue(Flag.FLY));
+                player.setAllowFlight(privilege.getFlagValue(Flags.FLY));
             } else {
                 GroupDTO group = getGroup(privilege.getGroupId());
                 if (group != null) {
-                    player.setAllowFlight(group.getFlagValue(Flag.FLY));
+                    player.setAllowFlight(group.getFlagValue(Flags.FLY));
                 } else {
-                    player.setAllowFlight(dominion.getFlagValue(Flag.FLY));
+                    player.setAllowFlight(dominion.getGuestPrivilegeFlagValue().get(Flags.FLY));
                 }
             }
         } else {
-            player.setAllowFlight(dominion.getFlagValue(Flag.FLY));
+            player.setAllowFlight(dominion.getGuestPrivilegeFlagValue().get(Flags.FLY));
         }
     }
 
@@ -378,7 +382,7 @@ public class Cache implements Listener {
 
     public String getPlayerName(UUID uuid) {
         if (!player_name_cache.containsKey(uuid)) {
-            PlayerDTO playerDTO = PlayerDTO.select(uuid);
+            PlayerDTO playerDTO = cn.lunadeer.dominion.dtos.PlayerDTO.select(uuid);
             if (playerDTO != null) {
                 player_name_cache.put(uuid, playerDTO.getLastKnownName());
             }
@@ -394,6 +398,16 @@ public class Cache implements Listener {
             }
         }
         return count;
+    }
+
+    public List<DominionDTO> getPlayerDominions(UUID player_uuid) {
+        List<DominionDTO> dominions = new ArrayList<>();
+        for (DominionDTO dominion : id_dominions.values()) {
+            if (dominion.getOwner().equals(player_uuid)) {
+                dominions.add(dominion);
+            }
+        }
+        return dominions;
     }
 
     public List<ResMigration.ResidenceNode> getResidenceData(UUID player_uuid) {
@@ -623,8 +637,8 @@ public class Cache implements Listener {
                         .replace("{OWNER}", getPlayerName(event.getDominion().getOwner()))
         );
         // show border
-        if (event.getDominion().getEnvironmentFlagValue().get(Flag.SHOW_BORDER)) {
-            Particle.showBorder(event.getPlayer(), (DominionDTO) event.getDominion());
+        if (event.getDominion().getEnvironmentFlagValue().get(Flags.SHOW_BORDER)) {
+            Particle.showBorder(event.getPlayer(), event.getDominion());
         }
     }
 
@@ -637,14 +651,14 @@ public class Cache implements Listener {
                         .replace("{OWNER}", getPlayerName(event.getDominion().getOwner()))
         );
         // show border
-        if (event.getDominion().getEnvironmentFlagValue().get(Flag.SHOW_BORDER)) {
-            Particle.showBorder(event.getPlayer(), (DominionDTO) event.getDominion());
+        if (event.getDominion().getEnvironmentFlagValue().get(Flags.SHOW_BORDER)) {
+            Particle.showBorder(event.getPlayer(), event.getDominion());
         }
     }
 
     @EventHandler
     public void onPlayerCrossDominionBorderEvent(PlayerCrossDominionBorderEvent event) {
         XLogger.debug("PlayerCrossDominionBorderEvent called.");
-        checkPlayerStates(event.getPlayer(), (DominionDTO) event.getTo());
+        checkPlayerStates(event.getPlayer(), event.getTo());
     }
 }

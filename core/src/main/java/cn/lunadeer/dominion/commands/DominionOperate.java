@@ -2,19 +2,26 @@ package cn.lunadeer.dominion.commands;
 
 import cn.lunadeer.dominion.Cache;
 import cn.lunadeer.dominion.Dominion;
+import cn.lunadeer.dominion.DominionInterface;
+import cn.lunadeer.dominion.api.dtos.DominionDTO;
+import cn.lunadeer.dominion.api.dtos.GroupDTO;
+import cn.lunadeer.dominion.api.dtos.MemberDTO;
+import cn.lunadeer.dominion.api.dtos.PlayerDTO;
+import cn.lunadeer.dominion.api.dtos.flag.Flags;
 import cn.lunadeer.dominion.controllers.BukkitPlayerOperator;
-import cn.lunadeer.dominion.controllers.DominionController;
-import cn.lunadeer.dominion.dtos.DominionDTO;
-import cn.lunadeer.dominion.dtos.Flag;
-import cn.lunadeer.dominion.dtos.GroupDTO;
-import cn.lunadeer.dominion.dtos.MemberDTO;
+import cn.lunadeer.dominion.events.dominion.DominionCreateEvent;
+import cn.lunadeer.dominion.events.dominion.DominionDeleteEvent;
+import cn.lunadeer.dominion.events.dominion.modify.*;
 import cn.lunadeer.dominion.managers.Translation;
+import cn.lunadeer.dominion.utils.ArgumentParser;
 import cn.lunadeer.minecraftpluginutils.Notification;
 import cn.lunadeer.minecraftpluginutils.Scheduler;
 import cn.lunadeer.minecraftpluginutils.Teleport;
 import cn.lunadeer.minecraftpluginutils.XLogger;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.block.BlockFace;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -23,6 +30,7 @@ import java.util.Map;
 
 import static cn.lunadeer.dominion.DominionNode.isInDominion;
 import static cn.lunadeer.dominion.utils.CommandUtils.*;
+import static cn.lunadeer.dominion.utils.ControllerUtils.getPlayerCurrentDominion;
 import static cn.lunadeer.dominion.utils.EventUtils.canByPass;
 
 public class DominionOperate {
@@ -48,9 +56,17 @@ public class DominionOperate {
             Notification.error(sender, Translation.Commands_Dominion_CreateSelectPointsFirst);
             return;
         }
+        if (!points.get(0).getWorld().getUID().equals(points.get(1).getWorld().getUID())) {
+            Notification.error(sender, Translation.Messages_SelectPointsWorldNotSame);
+            return;
+        }
+        if (!player.getWorld().getUID().equals(points.get(0).getWorld().getUID())) {
+            Notification.error(sender, Translation.Messages_CrossWorldOperationDisallowed);
+            return;
+        }
         String name = args[1];
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(player);
-        DominionController.create(operator, name, points.get(0), points.get(1));
+        new DominionCreateEvent(operator, name, player.getUniqueId(), points.get(0), points.get(1), null).call();
     }
 
     /**
@@ -76,13 +92,22 @@ public class DominionOperate {
             return;
         }
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(player);
+        DominionDTO parent;
         if (args.length == 2) {
-            DominionController.create(operator, args[1], points.get(0), points.get(1));
+            parent = getPlayerCurrentDominion(operator);
+            if (parent == null) {
+                Notification.error(sender, Translation.Messages_CannotGetDominionAuto);
+                return;
+            }
         } else {
-            DominionController.create(operator, args[1], points.get(0), points.get(1), args[2]);
+            parent = DominionInterface.instance.getDominion(args[2]);
+            if (parent == null) {
+                Notification.error(sender, Translation.Messages_ParentDominionNotExist, args[2]);
+                return;
+            }
         }
+        new DominionCreateEvent(operator, args[1], player.getUniqueId(), points.get(0), points.get(1), parent).call();
     }
-
 
 
     /**
@@ -138,29 +163,28 @@ public class DominionOperate {
     }
 
 
-
     /**
      * 扩张领地
-     * /dominion expand [大小] [领地名称]
+     * /dominion expand [size=10] [face=NORTH,SOUTH,EAST,WEST,UP,DOWN] [name=领地名称]
+     * /dominion contract [size=10] [face=NORTH,SOUTH,EAST,WEST,UP,DOWN] [name=领地名称]
      *
      * @param sender 命令发送者
      * @param args   命令参数
+     * @param type   扩张类型
      */
-    public static void expandDominion(CommandSender sender, String[] args) {
+    public static void sizeChangeDominion(CommandSender sender, String[] args, DominionSizeChangeEvent.SizeChangeType type) {
         if (!hasPermission(sender, "dominion.default")) {
             return;
         }
         Player player = playerOnly(sender);
         if (player == null) return;
-        if (args.length != 2 && args.length != 3) {
-            Notification.error(sender, Translation.Commands_Dominion_ExpandDominionUsage);
-            return;
-        }
-        int size = 10;
-        String name = "";
+        BukkitPlayerOperator operator = BukkitPlayerOperator.create(player);
+        ArgumentParser parser = new ArgumentParser(args);
+        // get size
+        int size;
         try {
-            size = Integer.parseInt(args[1]);
-        } catch (Exception e) {
+            size = parser.getValInt("size", 10);
+        } catch (NumberFormatException e) {
             Notification.error(sender, Translation.Commands_Dominion_SizeShouldBeInteger);
             return;
         }
@@ -168,55 +192,33 @@ public class DominionOperate {
             Notification.error(sender, Translation.Commands_Dominion_SizeShouldBePositive);
             return;
         }
-        if (args.length == 3) {
-            name = args[2];
-        }
-        BukkitPlayerOperator operator = BukkitPlayerOperator.create(player);
-        if (name.isEmpty()) {
-            DominionController.expand(operator, size);
+        // get direction
+        BlockFace blockFace;
+        if (parser.hasKey("face")) {
+            blockFace = BlockFace.valueOf(parser.getVal("face"));
         } else {
-            DominionController.expand(operator, size, name);
+            blockFace = operator.getDirection();
+            if (blockFace == null) {
+                Notification.error(sender, Translation.Messages_CannotGetDirection);
+                return;
+            }
         }
-    }
-
-    /**
-     * 缩小领地
-     * /dominion contract [大小] [领地名称]
-     *
-     * @param sender 命令发送者
-     * @param args   命令参数
-     */
-    public static void contractDominion(CommandSender sender, String[] args) {
-        if (!hasPermission(sender, "dominion.default")) {
-            return;
-        }
-        Player player = playerOnly(sender);
-        if (player == null) return;
-        if (args.length != 2 && args.length != 3) {
-            Notification.error(sender, Translation.Commands_Dominion_ContractDominionUsage);
-            return;
-        }
-        int size = 10;
-        String name = "";
-        try {
-            size = Integer.parseInt(args[1]);
-        } catch (Exception e) {
-            Notification.error(sender, Translation.Commands_Dominion_SizeShouldBeInteger);
-            return;
-        }
-        if (size <= 0) {
-            Notification.error(sender, Translation.Commands_Dominion_SizeShouldBePositive);
-            return;
-        }
-        if (args.length == 3) {
-            name = args[2];
-        }
-        BukkitPlayerOperator operator = BukkitPlayerOperator.create(player);
-        if (name.isEmpty()) {
-            DominionController.contract(operator, size);
+        // get dominion
+        DominionDTO dominion;
+        if (parser.hasKey("name")) {
+            dominion = DominionInterface.instance.getDominion(parser.getVal("name", ""));
+            if (dominion == null) {
+                Notification.error(sender, Translation.Messages_DominionNotExist, parser.getVal("name"));
+                return;
+            }
         } else {
-            DominionController.contract(operator, size, name);
+            dominion = getPlayerCurrentDominion(operator);
+            if (dominion == null) {
+                Notification.error(sender, Translation.Messages_CannotGetDominionAuto);
+                return;
+            }
         }
+        new DominionSizeChangeEvent(operator, dominion, type, blockFace, size).call();
     }
 
     /**
@@ -231,65 +233,62 @@ public class DominionOperate {
             return;
         }
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
-        if (args.length == 2) {
-            String name = args[1];
-            DominionController.delete(operator, name, false);
+        if (args.length < 2) {
+            Notification.error(sender, Translation.Commands_Dominion_DeleteDominionUsage);
             return;
         }
+        boolean force = false;
         if (args.length == 3) {
-            String name = args[1];
             if (args[2].equals("force")) {
-                DominionController.delete(operator, name, true);
-                return;
+                force = true;
             }
         }
-        Notification.error(sender, Translation.Commands_Dominion_DeleteDominionUsage);
+        DominionDTO dominion = DominionInterface.instance.getDominion(args[1]);
+        if (dominion == null) {
+            Notification.error(sender, Translation.Messages_DominionNotExist, args[1]);
+            return;
+        }
+        DominionDeleteEvent event = new DominionDeleteEvent(operator, dominion);
+        event.setForce(force);
+        event.call();
     }
 
     /**
      * 设置领地进入提示
      * /dominion set_enter_msg <提示语> [领地名称]
-     *
-     * @param sender 命令发送者
-     * @param args   命令参数
-     */
-    public static void setEnterMessage(CommandSender sender, String[] args) {
-        if (!hasPermission(sender, "dominion.default")) {
-            return;
-        }
-        BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
-        if (args.length == 2) {
-            DominionController.setJoinMessage(operator, args[1]);
-            return;
-        }
-        if (args.length == 3) {
-            DominionController.setJoinMessage(operator, args[1], args[2]);
-            return;
-        }
-        Notification.error(sender, Translation.Commands_Dominion_SetEnterMessageUsage);
-    }
-
-    /**
-     * 设置领地离开提示
      * /dominion set_leave_msg <提示语> [领地名称]
      *
      * @param sender 命令发送者
      * @param args   命令参数
      */
-    public static void setLeaveMessage(CommandSender sender, String[] args) {
+    public static void setEnterLeaveMessage(CommandSender sender, String[] args, DominionSetMessageEvent.MessageChangeType type) {
         if (!hasPermission(sender, "dominion.default")) {
             return;
         }
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
+        if (args.length < 2) {
+            if (type == DominionSetMessageEvent.MessageChangeType.ENTER) {
+                Notification.error(sender, Translation.Commands_Dominion_SetEnterMessageUsage);
+            } else {
+                Notification.error(sender, Translation.Commands_Dominion_SetLeaveMessageUsage);
+            }
+            return;
+        }
+        DominionDTO dominion;
         if (args.length == 2) {
-            DominionController.setLeaveMessage(operator, args[1]);
+            dominion = getPlayerCurrentDominion(operator);
+        } else {
+            dominion = DominionInterface.instance.getDominion(args[2]);
+        }
+        if (dominion == null) {
+            Notification.error(sender, Translation.Messages_DominionNotExist, args[2]);
             return;
         }
-        if (args.length == 3) {
-            DominionController.setLeaveMessage(operator, args[1], args[2]);
-            return;
+        if (type == DominionSetMessageEvent.MessageChangeType.ENTER) {
+            new DominionSetMessageEvent(operator, dominion, DominionSetMessageEvent.MessageChangeType.ENTER, args[1]).call();
+        } else {
+            new DominionSetMessageEvent(operator, dominion, DominionSetMessageEvent.MessageChangeType.LEAVE, args[1]).call();
         }
-        Notification.error(sender, Translation.Commands_Dominion_SetLeaveMessageUsage);
     }
 
     /**
@@ -306,18 +305,22 @@ public class DominionOperate {
         Player player = playerOnly(sender);
         if (player == null) return;
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(player);
+        if (args.length < 1) {
+            Notification.error(sender, Translation.Commands_Dominion_SetTpLocationUsage);
+            return;
+        }
+        DominionDTO dominion;
         if (args.length == 1) {
-            DominionController.setTpLocation(operator,
-                    player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ());
+            dominion = getPlayerCurrentDominion(operator);
+        } else {
+            dominion = DominionInterface.instance.getDominion(args[1]);
+        }
+        if (dominion == null) {
+            Notification.error(sender, Translation.Messages_DominionNotExist, args[1]);
             return;
         }
-        if (args.length == 2) {
-            DominionController.setTpLocation(operator,
-                    player.getLocation().getBlockX(), player.getLocation().getBlockY(), player.getLocation().getBlockZ(),
-                    args[1]);
-            return;
-        }
-        Notification.error(sender, Translation.Commands_Dominion_SetTpLocationUsage);
+        Location location = player.getLocation();
+        new DominionSetTpLocationEvent(operator, dominion, location).call();
     }
 
     /**
@@ -336,7 +339,12 @@ public class DominionOperate {
             Notification.error(sender, Translation.Commands_Dominion_RenameDominionUsage);
             return;
         }
-        DominionController.rename(operator, args[1], args[2]);
+        DominionDTO dominion = DominionInterface.instance.getDominion(args[1]);
+        if (dominion == null) {
+            Notification.error(sender, Translation.Messages_DominionNotExist, args[1]);
+            return;
+        }
+        new DominionRenameEvent(operator, dominion, args[2]).call();
     }
 
     /**
@@ -351,21 +359,29 @@ public class DominionOperate {
             return;
         }
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
-        if (args.length == 3) {
-            String dom_name = args[1];
-            String player_name = args[2];
-            DominionController.give(operator, dom_name, player_name, false);
+        if (args.length < 3) {
+            Notification.error(sender, Translation.Commands_Dominion_GiveDominionUsage);
             return;
         }
+        boolean force = false;
         if (args.length == 4) {
-            String dom_name = args[1];
-            String player_name = args[2];
             if (args[3].equals("force")) {
-                DominionController.give(operator, dom_name, player_name, true);
-                return;
+                force = true;
             }
         }
-        Notification.error(sender, Translation.Commands_Dominion_GiveDominionUsage);
+        DominionDTO dominion = DominionInterface.instance.getDominion(args[1]);
+        if (dominion == null) {
+            Notification.error(sender, Translation.Messages_DominionNotExist, args[1]);
+            return;
+        }
+        PlayerDTO playerDTO = DominionInterface.instance.getPlayerDTO(args[2]);
+        if (playerDTO == null) {
+            Notification.error(sender, Translation.Messages_PlayerNotExist, args[2]);
+            return;
+        }
+        DominionTransferEvent event = new DominionTransferEvent(operator, dominion, playerDTO);
+        event.setForce(force);
+        event.call();
     }
 
     /**
@@ -385,7 +401,7 @@ public class DominionOperate {
             Notification.error(sender, Translation.Commands_Dominion_TpDominionUsage);
             return;
         }
-        DominionDTO dominionDTO = DominionDTO.select(args[1]);
+        DominionDTO dominionDTO = DominionInterface.instance.getDominion(args[1]);
         if (dominionDTO == null) {
             Notification.error(sender, Translation.Commands_Dominion_DominionNotExist);
             return;
@@ -413,22 +429,22 @@ public class DominionOperate {
             return;
         }
 
-        MemberDTO privilegeDTO = MemberDTO.select(player.getUniqueId(), dominionDTO.getId());
+        MemberDTO privilegeDTO = DominionInterface.instance.getMember(player.getUniqueId(), dominionDTO);
         if (!canByPass(player, dominionDTO, privilegeDTO)) {
             if (privilegeDTO == null) {
-                if (!dominionDTO.getFlagValue(Flag.TELEPORT)) {
+                if (!dominionDTO.getGuestPrivilegeFlagValue().get(Flags.TELEPORT)) {
                     Notification.error(sender, Translation.Messages_DominionNoTp);
                     return;
                 }
             } else {
                 GroupDTO groupDTO = Cache.instance.getGroup(privilegeDTO.getGroupId());
                 if (privilegeDTO.getGroupId() != -1 && groupDTO != null) {
-                    if (!groupDTO.getFlagValue(Flag.TELEPORT)) {
+                    if (!groupDTO.getFlagValue(Flags.TELEPORT)) {
                         Notification.error(sender, Translation.Messages_GroupNoTp);
                         return;
                     }
                 } else {
-                    if (!privilegeDTO.getFlagValue(Flag.TELEPORT)) {
+                    if (!privilegeDTO.getFlagValue(Flags.TELEPORT)) {
                         Notification.error(sender, Translation.Messages_PrivilegeNoTp);
                         return;
                     }
@@ -494,6 +510,7 @@ public class DominionOperate {
 
     /**
      * 设置领地卫星地图地块颜色
+     * /dominion set_map_color <颜色> [领地名称]
      *
      * @param sender 命令发送者
      * @param args   命令参数
@@ -507,11 +524,26 @@ public class DominionOperate {
             return;
         }
         BukkitPlayerOperator operator = BukkitPlayerOperator.create(sender);
+        DominionDTO dominion;
         if (args.length == 2) {
-            DominionController.setMapColor(operator, args[1]);
+            dominion = getPlayerCurrentDominion(operator);
+            if (dominion == null) {
+                Notification.error(sender, Translation.Messages_CannotGetDominionAuto);
+                return;
+            }
         } else {
-            DominionController.setMapColor(operator, args[1], args[2]);
+            dominion = DominionInterface.instance.getDominion(args[2]);
+            if (dominion == null) {
+                Notification.error(sender, Translation.Messages_DominionNotExist, args[2]);
+                return;
+            }
         }
+        if (!args[1].matches("^#[0-9a-fA-F]{6}$")) {
+            Notification.error(sender, Translation.Messages_MapColorInvalid);
+            return;
+        }
+        Color color = Color.fromRGB(Integer.parseInt(args[1].substring(1), 16));
+        new DominionSetMapColorEvent(operator, dominion, color).call();
     }
 
 }

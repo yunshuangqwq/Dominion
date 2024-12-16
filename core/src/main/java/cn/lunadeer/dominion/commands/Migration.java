@@ -2,9 +2,9 @@ package cn.lunadeer.dominion.commands;
 
 import cn.lunadeer.dominion.Cache;
 import cn.lunadeer.dominion.Dominion;
+import cn.lunadeer.dominion.api.dtos.DominionDTO;
 import cn.lunadeer.dominion.controllers.BukkitPlayerOperator;
-import cn.lunadeer.dominion.controllers.DominionController;
-import cn.lunadeer.dominion.dtos.DominionDTO;
+import cn.lunadeer.dominion.events.dominion.DominionCreateEvent;
 import cn.lunadeer.dominion.managers.Translation;
 import cn.lunadeer.dominion.uis.tuis.MigrateList;
 import cn.lunadeer.dominion.utils.ResMigration;
@@ -52,7 +52,7 @@ public class Migration {
                 Notification.error(sender, Translation.Commands_Residence_ResidenceNotOwner);
                 return;
             }
-            create(player, resNode, "");
+            create(player, resNode, null);
             if (args.length == 3) {
                 int parentId = Integer.parseInt(args[2]);
                 String[] newArgs = new String[2];
@@ -65,36 +65,22 @@ public class Migration {
         }
     }
 
-    private static void create(Player player, ResMigration.ResidenceNode node, String parentName) {
+    private static void create(Player player, ResMigration.ResidenceNode node, DominionDTO parent) {
         BukkitPlayerOperator operator = new BukkitPlayerOperator(player);
-        operator.getResponse().thenAccept(result -> {
-            if (Objects.equals(result.getStatus(), BukkitPlayerOperator.Result.SUCCESS)) {
-                DominionDTO dominion = DominionDTO.select(node.name);
-                if (dominion == null) {
-                    return;
-                }
-                dominion.setTpLocation(node.tpLoc)
-                        .setJoinMessage(node.joinMessage)
-                        .setLeaveMessage(node.leaveMessage);
-                for (String msg : result.getMessages()) {
-                    Notification.info(player, msg);
-                }
-                Notification.info(player, Translation.Commands_Residence_MigrateSuccess, node.name);
-                if (node.children != null) {
-                    for (ResMigration.ResidenceNode child : node.children) {
-                        create(player, child, node.name);
-                    }
-                }
-            } else if (Objects.equals(result.getStatus(), BukkitPlayerOperator.Result.WARNING)) {
-                for (String msg : result.getMessages()) {
-                    Notification.warn(player, msg);
-                }
-            } else {
-                for (String msg : result.getMessages()) {
-                    Notification.error(player, msg);
+        DominionCreateEvent event = new DominionCreateEvent(operator, node.name, player.getUniqueId(), node.loc1, node.loc2, parent);
+        event.setSkipEconomy(true);
+        event.callEvent();
+        if (!event.isCancelled()) {
+            Notification.info(player, Translation.Commands_Residence_MigrateSuccess, node.name);
+            DominionDTO dominionCreated = event.getDominion();
+            Objects.requireNonNull(Objects.requireNonNull(dominionCreated.setTpLocation(node.tpLoc))
+                            .setJoinMessage(node.joinMessage))
+                    .setLeaveMessage(node.leaveMessage);
+            if (node.children != null) {
+                for (ResMigration.ResidenceNode child : node.children) {
+                    create(player, child, dominionCreated);
                 }
             }
-        });
-        DominionController.create(operator, node.name, node.loc1, node.loc2, parentName, true);
+        }
     }
 }
