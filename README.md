@@ -1,6 +1,6 @@
 ## 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion)
 ## 镜像的文档：[点击跳转](https://dom.yunr.us.kg)
-fork于（2025年01月23日 02时14分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
+fork于（2025年01月23日 04时11分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
 <div align=center>
 
 <img src="logos/logo3.png" alt="" width="30%">
