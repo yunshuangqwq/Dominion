@@ -1,4 +1,4 @@
-# 镜像 Dominion 文档 - 于（2025年02月14日 14时15分）fork - 源文档：[点击跳转](https://dominion.lunadeer.cn)
+# 镜像 Dominion 文档 - 于（2025年02月14日 16时14分）fork - 源文档：[点击跳转](https://dominion.lunadeer.cn)
 
 [![GitHub Repository](https://img.shields.io/badge/仓库地址-GitHub-blue?logo=github)](https://github.com/ColdeZhang/Dominion)
 [![bStats](https://img.shields.io/badge/bStats-数据统计-eacd76?logo=google-analytics)](https://bstats.org/plugin/bukkit/Dominion/21445)
