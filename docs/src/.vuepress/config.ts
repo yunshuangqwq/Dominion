@@ -34,8 +34,9 @@ export default defineUserConfig({
         // 添加您的部署域名
         // hostname: 'https://your_site_url',
         // your git repo url
-        docsRepo: 'https://github.com/ColdeZhang',
-        docsDir: 'docs',
+        docsRepo: 'https://github.com/ColdeZhang/Dominion',
+        docsDir: 'docs/src',
+        docsBranch: 'master',
 
         blog: false,  // 禁用博客
 
