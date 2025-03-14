@@ -5,8 +5,8 @@ export const zhNavbar = defineNavbarConfig([
     {
         text: '使用文档',
         items: [
-            {text: '玩家手册', link: '/notes/doc/player/README.md'},
-            {text: '服主手册', link: '/notes/doc/owner/README.md'},
+            {text: '玩家手册', link: '/notes/doc/player/0.README.md'},
+            {text: '服主手册', link: '/notes/doc/owner/0.README.md'},
         ]
     },
     {text: 'API参考', link: '/notes/api/README.md'},
@@ -17,8 +17,8 @@ export const enNavbar = defineNavbarConfig([
     {
         text: 'Documentation',
         items: [
-            {text: 'Player', link: '/en/notes/doc/player/README.md'},
-            {text: 'Server Owner', link: '/en/notes/doc/owner/README.md'},
+            {text: 'Player', link: '/en/notes/doc/player/0.README.md'},
+            {text: 'Server Owner', link: '/en/notes/doc/owner/0.README.md'},
         ]
     },
     {text: 'API Reference', link: '/en/notes/api/README.md'},
@@ -29,8 +29,8 @@ export const jpNavbar = defineNavbarConfig([
     {
         text: 'ドキュメント',
         items: [
-            {text: 'プレイヤー', link: '/jp/notes/doc/player/README.md'},
-            {text: 'サーバーオーナー', link: '/jp/notes/doc/owner/README.md'},
+            {text: 'プレイヤー', link: '/jp/notes/doc/player/0.README.md'},
+            {text: 'サーバーオーナー', link: '/jp/notes/doc/owner/0.README.md'},
         ]
     },
     {text: 'APIリファレンス', link: '/jp/notes/api/README.md'},
@@ -41,8 +41,8 @@ export const ruNavbar = defineNavbarConfig([
     {
         text: 'Документация',
         items: [
-            {text: 'Игрок', link: '/ru/notes/doc/player/README.md'},
-            {text: 'Владелец сервера', link: '/ru/notes/doc/owner/README.md'},
+            {text: 'Игрок', link: '/ru/notes/doc/player/0.README.md'},
+            {text: 'Владелец сервера', link: '/ru/notes/doc/owner/0.README.md'},
         ]
     },
     {text: 'API Справочник', link: '/ru/notes/api/README.md'},

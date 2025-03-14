@@ -1,6 +1,6 @@
 ## 上游仓库：[点击跳转](https://github.com/ColdeZhang/Dominion)
 ## 镜像的文档：[点击跳转](https://dom.yunr.us.kg)
-fork于（2025年03月14日 14时16分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
+fork于（2025年03月14日 16时14分），本仓库非Dominion插件仓库，由于源Dominion文档网站访问有点慢就fork下来套了个反向代理（已征得作者同意），若要获取最新Dominion插件信息请前往上游仓库!
 <div align=center>
 
 <img src="logos/logo3.png" alt="" width="30%">
@@ -39,7 +39,7 @@ For detail functions and features of Dominion, you can view [Introduction](intro
 ## For developer
 
 Dominion provides some simple (for now) APIs for developers to build something amazing depends on Dominion. You can
-take a look at [Developer](docs/en-us/developer.md) for more details.
+take a look at [API Reference](https://dominion.lunadeer.cn/en/notes/api/) for more details.
 
 ## Help us improve
 

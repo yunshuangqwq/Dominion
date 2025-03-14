@@ -6,8 +6,7 @@ permalink: /notes/api/
 
 ## 链接
 
-<LinkCard icon="twemoji:airplane-departure" title="开始使用" href="https://furniturebench.lunadeer.cn/" />
+<LinkCard icon="vscode-icons:file-type-dtd" title="源码仓库" href="https://github.com/ColdeZhang/DominionAPI" />
 
-<LinkCard icon="unjs:unpdf" title="使用教程" href="/notes/bench/new-model/" />
+<LinkCard icon="twemoji:airplane-departure" title="JavaDoc" href="https://coldezhang.github.io/DominionAPI/" />
 
-<LinkCard icon="vscode-icons:file-type-dtd" title="源码仓库" href="https://github.com/FurnitureCore/FurnitureBench/tree/dev/furniture" />
