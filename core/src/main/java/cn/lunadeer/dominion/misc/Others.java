@@ -16,6 +16,8 @@ import cn.lunadeer.dominion.utils.configuration.ConfigurationPart;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.jetbrains.annotations.NotNull;
@@ -102,7 +104,45 @@ public class Others {
         XLogger.info(Language.othersText.autoCleanEnd);
     }
 
+    /**
+     * Checks if a player has the privilege flag for a given dominion.
+     * <p>
+     * This method checks if the player has the specified privilege flag for the given dominion. If the player does not have
+     * the privilege, it displays a no-permission message and cancels the event if provided.
+     *
+     * @param dom    the DominionDTO to check the privilege flag for
+     * @param flag   the PriFlag to check
+     * @param player the Player object representing the player
+     * @param event  the Cancellable event to cancel if the player does not have the privilege
+     * @return true if the player has the privilege flag, false otherwise
+     */
     public static boolean checkPrivilegeFlag(@Nullable DominionDTO dom, @NotNull PriFlag flag, @NotNull Player player, @Nullable Cancellable event) {
+        if (checkPrivilegeFlagSilence(dom, flag, player, event)) {
+            return true;
+        } else {
+            String msg = formatString(Language.othersText.noPermissionForFlag, flag.getDisplayName(), flag.getDescription());
+            msg = "&#FF0000" + "&l" + msg;
+            MessageDisplay.show(player, MessageDisplay.Place.valueOf(Configuration.pluginMessage.noPermissionDisplayPlace.toUpperCase()), msg);
+            if (event != null) {
+                event.setCancelled(true);
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Silently checks if a player has the privilege flag for a given dominion.
+     * <p>
+     * This method checks if the player has the specified privilege flag for the given dominion without displaying any messages.
+     * It returns true if the player has the privilege flag, false otherwise.
+     *
+     * @param dom    the DominionDTO to check the privilege flag for
+     * @param flag   the PriFlag to check
+     * @param player the Player object representing the player
+     * @param event  the Cancellable event to cancel if the player does not have the privilege
+     * @return true if the player has the privilege flag, false otherwise
+     */
+    public static boolean checkPrivilegeFlagSilence(@Nullable DominionDTO dom, @NotNull PriFlag flag, @NotNull Player player, @Nullable Cancellable event) {
         if (!flag.getEnable()) {
             return true;
         }
@@ -117,29 +157,27 @@ public class Others {
             if (member != null) {
                 GroupDTO group = CacheManager.instance.getGroup(member.getGroupId());
                 if (member.getGroupId() != -1 && group != null) {
-                    if (group.getFlagValue(flag)) {
-                        return true;
-                    }
+                    return group.getFlagValue(flag);
                 } else {
-                    if (member.getFlagValue(flag)) {
-                        return true;
-                    }
+                    return member.getFlagValue(flag);
                 }
             } else {
-                if (dom.getGuestPrivilegeFlagValue().get(flag)) {
-                    return true;
-                }
+                return dom.getGuestPrivilegeFlagValue().get(flag);
             }
-            String msg = formatString(Language.othersText.noPermissionForFlag, flag.getDisplayName(), flag.getDescription());
-            msg = "&#FF0000" + "&l" + msg;
-            MessageDisplay.show(player, MessageDisplay.Place.valueOf(Configuration.pluginMessage.noPermissionDisplayPlace.toUpperCase()), msg);
-            if (event != null) {
-                event.setCancelled(true);
-            }
-            return false;
         }
     }
 
+    /**
+     * Checks if a dominion has the environment flag enabled.
+     * <p>
+     * This method checks if the specified environment flag is enabled for the given dominion. If the flag is not enabled,
+     * it cancels the event if provided.
+     *
+     * @param dom   the DominionDTO to check the environment flag for
+     * @param flag  the EnvFlag to check
+     * @param event the Cancellable event to cancel if the environment flag is not enabled
+     * @return true if the environment flag is enabled, false otherwise
+     */
     public static boolean checkEnvironmentFlag(@Nullable DominionDTO dom, @NotNull EnvFlag flag, @Nullable Cancellable event) {
         if (!flag.getEnable()) {
             return true;
@@ -241,5 +279,14 @@ public class Others {
                 material == Material.CHORUS_FLOWER ||
                 material == Material.KELP ||
                 material == Material.KELP_PLANT;
+    }
+
+    public static boolean isExplodeEntity(@NotNull Entity entity) {
+        return entity.getType() == EntityType.CREEPER
+                || entity.getType() == EntityType.WITHER_SKULL
+                || entity.getType() == EntityType.FIREBALL
+                || entity.getType() == EntityType.ENDER_CRYSTAL
+                || entity.getType() == EntityType.SMALL_FIREBALL
+                || entity.getType() == EntityType.DRAGON_FIREBALL;
     }
 }
