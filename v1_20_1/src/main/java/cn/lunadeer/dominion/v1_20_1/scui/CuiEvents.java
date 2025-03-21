@@ -1,5 +1,8 @@
 package cn.lunadeer.dominion.v1_20_1.scui;
 
+import cn.lunadeer.dominion.events.HighestVersion;
+import cn.lunadeer.dominion.events.PaperOnly;
+import cn.lunadeer.dominion.utils.XVersionManager;
 import cn.lunadeer.dominion.utils.scui.CuiManager;
 import cn.lunadeer.dominion.utils.scui.CuiView;
 import cn.lunadeer.dominion.utils.scui.ItemStackButton;
@@ -18,7 +21,8 @@ import java.util.UUID;
 import static cn.lunadeer.dominion.utils.Misc.isPaper;
 import static cn.lunadeer.dominion.utils.scui.CuiManager.getTokenFromHiddenComponent;
 
-
+@HighestVersion(XVersionManager.ImplementationVersion.v1_20_1)
+@PaperOnly
 public class CuiEvents implements Listener {
 
     @EventHandler(priority = EventPriority.HIGH)

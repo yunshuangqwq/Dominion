@@ -14,7 +14,7 @@ libraries += "net.kyori:adventure-platform-bukkit:4.3.3"
 
 
 group = "cn.lunadeer"
-version = "4.0.0-alpha.31"
+version = "4.0.0-alpha.32"
 
 java {
     toolchain.languageVersion.set(JavaLanguageVersion.of(17))
@@ -92,10 +92,8 @@ allprojects {
 
 dependencies {
     implementation(project(":core"))
-    implementation(project(":v1_20_1_paper"))
-    implementation(project(":v1_20_1_spigot"))
-    implementation(project(":v1_21_paper"))
-    implementation(project(":v1_21_spigot"))
+    implementation(project(":v1_20_1"))
+    implementation(project(":v1_21"))
 }
 
 tasks.shadowJar {
